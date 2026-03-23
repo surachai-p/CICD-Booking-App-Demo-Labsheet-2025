@@ -1,0 +1,321 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Frontend CI/CD Pipeline — React + Vite → Vercel
+# Repository: surachai-p/booking-app-demo-2025
+#
+# กระบวนการ:
+# push/PR → lint → unit-tests ┐
+#                              ├→ build → deploy (main) / preview (PR)
+#                 integration-tests ┘
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+name: 🎨 Frontend CI/CD
+
+# ─── Triggers ──────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci-cd.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+# ─── Global Environment Variables ──────────────────────────────────────────
+env:
+  NODE_VERSION: '18'
+  WORKING_DIR: ./frontend
+
+# ─── ป้องกัน duplicate workflow runs ───────────────────────────────────────
+concurrency:
+  group: frontend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+jobs:
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 1: Lint — ตรวจสอบ ESLint
+  # ─────────────────────────────────────────────────────────────────────────
+  lint:
+    name: 🔍 ESLint Code Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 2: Unit Tests — ทดสอบ React Components ด้วย Vitest
+  # ─────────────────────────────────────────────────────────────────────────
+  unit-tests:
+    name: 🧪 Unit Tests (Vitest + RTL)
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: 🧪 Run Unit Tests with Coverage
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:coverage
+        env:
+          VITE_API_URL: http://localhost:3000   # Mock URL (tests ใช้ MSW)
+
+      - name: 📊 Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage-${{ github.run_number }}
+          path: frontend/coverage/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 3: Integration Tests — ทดสอบ API integration ด้วย MSW
+  # ─────────────────────────────────────────────────────────────────────────
+  integration-tests:
+    name: 🔗 Integration Tests (MSW API Mock)
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: 🔗 Run Integration Tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:integration
+        env:
+          # MSW interceptes ทุก fetch call — ไม่ต้องรัน backend จริง
+          VITE_API_URL: http://localhost:3000
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 4: Build — Build สำหรับ Production
+  # ─────────────────────────────────────────────────────────────────────────
+  build:
+    name: 🏗️ Build Production Bundle
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]    # รอให้ tests ผ่านก่อน
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: 🏗️ Build for Production
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        env:
+          # ใช้ secret ที่ตั้งค่าไว้ใน GitHub
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: 📦 Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.run_number }}
+          path: frontend/dist/
+          retention-days: 7
+
+      - name: 📊 Build Size Report
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📦 Build Output Size:"
+          du -sh dist/
+          echo ""
+          echo "📄 Files:"
+          find dist/ -type f | sort
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 5: Deploy to Production (main branch only)
+  # ─────────────────────────────────────────────────────────────────────────
+  deploy-production:
+    name: 🚀 Deploy to Vercel (Production)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 15
+
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.preview-url }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: 📋 Deployment Info
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🚀 Deploying Frontend to Vercel"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Commit: ${{ github.sha }}"
+          echo "By:     ${{ github.actor }}"
+          echo "Run:    #${{ github.run_number }}"
+
+      - name: 🚀 Deploy to Vercel (Production)
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ${{ env.WORKING_DIR }}
+          vercel-args: '--prod'      # production deployment
+
+      - name: 🔍 Verify Frontend Deployment
+        run: |
+          FRONTEND_URL="${{ steps.deploy.outputs.preview-url }}"
+          echo "Checking: $FRONTEND_URL"
+          
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$FRONTEND_URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Frontend verification passed (attempt $i)"
+              exit 0
+            fi
+            echo "⏳ Attempt $i: HTTP $STATUS — retrying..."
+            sleep 15
+          done
+          
+          echo "❌ Frontend verification failed"
+          exit 1
+
+      - name: 🎉 Deployment Success Summary
+        if: success()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ FRONTEND DEPLOYED SUCCESSFULLY!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🌐 URL: ${{ steps.deploy.outputs.preview-url }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 6: Preview Deploy (Pull Requests only)
+  # ─────────────────────────────────────────────────────────────────────────
+  deploy-preview:
+    name: 👀 Preview Deploy (PR)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 15
+
+    permissions:
+      pull-requests: write     # ต้องการสิทธิ์เพื่อ comment บน PR
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: 👀 Deploy Preview to Vercel
+        id: preview
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ${{ env.WORKING_DIR }}
+          # ไม่ใส่ --prod = preview deployment
+
+      - name: 💬 Comment Preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.preview.outputs.preview-url }}';
+            const sha = '${{ github.sha }}'.substring(0, 7);
+            const branch = '${{ github.head_ref }}';
+            const actor = '${{ github.actor }}';
+
+            const body = [
+              '## 👀 Preview Deployment Ready!',
+              '',
+              `**🌐 URL:** ${url}`,
+              `**🔀 Branch:** \`${branch}\``,
+              `**📝 Commit:** \`${sha}\``,
+              `**👤 By:** @${actor}`,
+              '',
+              '> ⚠️ This is a preview deployment. Changes will be in production after merging to `main`.',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });
