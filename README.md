@@ -2,7 +2,7 @@
 ## Booking App Demo 2025 — Vercel + Render Deployment
 
 > **Repository:** `https://github.com/surachai-p/booking-app-demo-2025`  
-> **ระดับ:** ปริญญาตรี / ปริญญาโท  
+> **ระดับ:** ปริญญาตรี  
 > **เวลา:** 4–5 ชั่วโมง  
 
 ---
