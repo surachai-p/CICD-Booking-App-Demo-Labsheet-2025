@@ -11,9 +11,7 @@
 | ไฟล์ | หัวข้อ | เวลา |
 |------|--------|------|
 | [📖 LAB-THEORY.md](LAB-THEORY.md) | ทฤษฎี GitHub Actions & CI/CD | อ่านก่อนทดลอง |
-| [⚙️ LAB-01-SETUP.md](LAB-01-SETUP.md) | เตรียม Repository & Environment | 45 นาที |
-| [🔧 LAB-02-BACKEND.md](LAB-02-BACKEND.md) | Backend Setup, Prisma & API Tests | 60 นาที |
-| [🎨 LAB-03-FRONTEND.md](LAB-03-FRONTEND.md) | Frontend Setup, Build & Vercel | 60 นาที |
+| [⚙️ LAB-01-SETUP.md](LAB-01-SETUP.md) | เตรียม Repository, Backend, Frontend และ Deployment | 120 นาที |
 | [🔒 LAB-04-SECURITY.md](LAB-04-SECURITY.md) | Security Review & Deployment Hardening | 45 นาที |
 | [📝 LAB-ASSIGNMENT.md](LAB-ASSIGNMENT.md) | ใบงานส่ง & คำถาม | ส่งท้ายคาบ |
 

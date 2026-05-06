@@ -1,6 +1,6 @@
 # 🔒 LAB-04: Security Review & Deployment Hardening
 
-[← LAB-03 Frontend](LAB-03-FRONTEND.md) | [ถัดไป: LAB-ASSIGNMENT →](LAB-ASSIGNMENT.md)
+[← LAB-01 Setup](LAB-01-SETUP.md) | [ถัดไป: LAB-ASSIGNMENT →](LAB-ASSIGNMENT.md)
 
 ---
 
@@ -161,4 +161,4 @@ done
 - [ ] รู้วิธีเพิ่ม secrets ใน GitHub
 - [ ] ทดสอบ security บน production deployment
 
-[← LAB-03 Frontend](LAB-03-FRONTEND.md) | [ถัดไป: LAB-ASSIGNMENT →](LAB-ASSIGNMENT.md)
+[← LAB-01 Setup](LAB-01-SETUP.md) | [ถัดไป: LAB-ASSIGNMENT →](LAB-ASSIGNMENT.md)
