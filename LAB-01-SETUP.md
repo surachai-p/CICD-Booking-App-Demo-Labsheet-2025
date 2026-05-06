@@ -97,9 +97,13 @@ npm install
 ```bash
 cd backend
 
+# รัน PostgreSQL ด้วย Docker Compose
 docker compose up -d
 
+# สร้าง Prisma client
 npx prisma generate
+
+# รัน migration
 npx prisma migrate dev --name init
 ```
 
@@ -128,7 +132,166 @@ http://localhost:5173
 
 ---
 
-## ขั้นตอนที่ 6: ตรวจสอบ workflow
+## ขั้นตอนที่ 6: ตั้งค่า Vercel สำหรับ Frontend Deployment
+
+### 6.1 สมัคร Vercel Account
+
+1. ไปที่ [https://vercel.com](https://vercel.com)
+2. **Sign in with GitHub**
+3. ยืนยัน email
+
+### 6.2 สร้าง Vercel Project
+
+1. คลิก **Add New → Project**
+2. เลือก repository `YOUR_USERNAME/booking-app-demo-2025`
+3. ตั้งค่า:
+   - **Framework Preset:** Vite
+   - **Root Directory:** `frontend`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+4. เพิ่ม Environment Variables:
+   - `VITE_API_URL` = `https://your-backend.onrender.com` (จะกรอกทีหลัง)
+5. คลิก **Deploy**
+
+### 6.3 ดึง Vercel Tokens
+
+ขั้นตอนดึง VERCEL_TOKEN:
+1. Vercel Dashboard → Settings (icon บัญชี) → Tokens
+2. Create Token → ตั้งชื่อ "GitHub Actions"
+3. Copy token → เก็บไว้ใช้ใน GitHub Secrets
+
+ขั้นตอนดึง VERCEL_ORG_ID และ VERCEL_PROJECT_ID:
+1. ติดตั้ง Vercel CLI:
+   ```bash
+   npm i -g vercel
+   ```
+2. เข้าสู่ระบบ:
+   ```bash
+   vercel login
+   ```
+3. Link project (รันใน frontend/):
+   ```bash
+   cd frontend
+   vercel link
+   ```
+4. ดู .vercel/project.json:
+   ```bash
+   cat .vercel/project.json
+   ```
+   จะเห็น `orgId` และ `projectId`
+
+---
+
+## ขั้นตอนที่ 7: ตั้งค่า Render สำหรับ Backend Deployment
+
+### 7.1 สมัคร Render Account
+
+1. ไปที่ [https://render.com](https://render.com)
+2. **Sign in with GitHub**
+
+### 7.2 สร้าง PostgreSQL Database
+
+1. คลิก **New → PostgreSQL**
+2. ตั้งชื่อ: `booking-db`
+3. เลือก region ที่ใกล้ที่สุด
+4. คลิก **Create Database**
+5. Copy **Internal Database URL** → เก็บไว้ใช้ใน Environment Variables
+
+### 7.3 สร้าง Web Service สำหรับ Backend
+
+1. คลิก **New → Web Service**
+2. เลือก repository `YOUR_USERNAME/booking-app-demo-2025`
+3. ตั้งค่า:
+   - **Name:** `booking-app-backend`
+   - **Root Directory:** `backend`
+   - **Environment:** `Node`
+   - **Build Command:** `npm ci`
+   - **Start Command:** `npm start`
+4. เพิ่ม Environment Variables:
+   - `NODE_ENV` = `production`
+   - `PORT` = `3000`
+   - `DATABASE_URL` = (จาก Render PostgreSQL)
+   - `JWT_SECRET` = (สุ่มสตริง 64 ตัวอักษร)
+   - `CORS_ORIGIN` = (Vercel URL ของ frontend)
+5. คลิก **Create Web Service**
+
+### 7.4 ดึง Deploy Hook URL
+
+1. Render Web Service → Settings → Deploy Hook
+2. Copy URL (จะมีลักษณะ: `https://api.render.com/deploy/srv-xxx?key=yyy`)
+
+---
+
+## ขั้นตอนที่ 8: ตั้งค่า GitHub Secrets
+
+ไปที่ **Repository → Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret Name | ค่า | ที่มา |
+|------------|-----|------|
+| `VERCEL_TOKEN` | `xxxxxxxx` | Vercel → Settings → Tokens |
+| `VERCEL_ORG_ID` | `team_xxxxx` | `.vercel/project.json` |
+| `VERCEL_PROJECT_ID` | `prj_xxxxx` | `.vercel/project.json` |
+| `RENDER_DEPLOY_HOOK_URL` | `https://api.render.com/...` | Render → Settings → Deploy Hook |
+| `VITE_API_URL` | `https://xxx.onrender.com` | Render service URL |
+| `JWT_SECRET` | `random-64-char-string` | สุ่มขึ้นมาเอง |
+
+### ตรวจสอบ Secrets
+
+```
+GitHub → Repository → Settings → Secrets and variables → Actions
+```
+
+ควรเห็น secrets ทั้ง 6 รายการ:
+
+```
+✅ VERCEL_TOKEN
+✅ VERCEL_ORG_ID
+✅ VERCEL_PROJECT_ID
+✅ RENDER_DEPLOY_HOOK_URL
+✅ VITE_API_URL
+✅ JWT_SECRET
+```
+
+---
+
+## ขั้นตอนที่ 9: ทดสอบ Local ด้วย Docker Compose
+
+แทนการรัน `npm run dev` ให้ใช้ Docker Compose เพื่อจำลอง production environment:
+
+```bash
+# หยุด npm run dev ก่อน (ถ้ากำลังรัน)
+# Ctrl+C เพื่อหยุด
+
+# รันทั้งระบบด้วย Docker Compose
+docker compose up --build
+```
+
+ระบบจะรันที่:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+- Database: `localhost:5432`
+
+---
+
+## ขั้นตอนที่ 10: Push และ Trigger Deployment
+
+```bash
+# Commit การเปลี่ยนแปลง
+git add .
+git commit -m "feat: setup environment and deployment configuration"
+
+# Push ขึ้น GitHub
+git push origin main
+```
+
+ตรวจสอบ GitHub Actions:
+- ไปที่ Repository → Actions
+- จะเห็น workflow `CI` รันอัตโนมัติ
+- เมื่อสำเร็จ จะ deploy ไป Vercel และ Render อัตโนมัติ
+
+---
+
+## ขั้นตอนที่ 11: ตรวจสอบ workflow
 
 เปิดไฟล์:
 
@@ -136,26 +299,14 @@ http://localhost:5173
 cat .github/workflows/ci.yml
 ```
 
-แทนที่จะสร้าง workflow ใหม่ ให้ใช้ workflow ที่มีอยู่และเข้าใจขั้นตอน:
-
+เข้าใจขั้นตอนใน workflow:
 - ติดตั้ง backend dependencies
 - รัน Docker Compose สำหรับ PostgreSQL
 - สร้าง Prisma client
 - รัน Prisma migration
 - ติดตั้ง frontend dependencies
 - Build frontend
-
----
-
-## ขั้นตอนที่ 7: Deployment Options (Optional)
-
-หากต้องการ deploy ต่อไปยัง Vercel/Render ให้ทำตามขั้นตอนใน `README.md` และเตรียม secrets ดังนี้:
-
-- `VITE_API_URL`
-- `RENDER_DATABASE_URL` (สำหรับ Render ถ้าใช้)
-- `JWT_SECRET` (สำหรับ production)
-
-> หมายเหตุ: เป้าหมายหลักของใบงานนี้คือให้เข้าใจ workflow และ deployment path ของ repository ที่มีอยู่จริง
+- Deploy ไป Vercel และ Render
 
 ---
 
@@ -166,6 +317,11 @@ cat .github/workflows/ci.yml
 - [ ] ติดตั้ง dependencies ทั้ง root/backend/frontend
 - [ ] backend รันได้ที่ `http://localhost:3000`
 - [ ] frontend รันได้ที่ `http://localhost:5173`
-- [ ] ตรวจสอบไฟล์ `.github/workflows/ci.yml`
+- [ ] สมัคร Vercel account และสร้าง project
+- [ ] สมัคร Render account และสร้าง database + web service
+- [ ] ตั้งค่า GitHub Secrets ครบทั้ง 6 รายการ
+- [ ] ทดสอบด้วย `docker compose up --build`
+- [ ] Push ขึ้น GitHub และ workflow รันสำเร็จ
+- [ ] Deploy ไป Vercel และ Render สำเร็จ
 
 [← ทฤษฎี](LAB-THEORY.md) | [ถัดไป: LAB-02 Backend →](LAB-02-BACKEND.md)
