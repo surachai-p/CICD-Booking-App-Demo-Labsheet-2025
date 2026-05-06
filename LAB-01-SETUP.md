@@ -98,19 +98,29 @@ npm install
 cd backend
 
 # รัน PostgreSQL ด้วย Docker Compose
+# ต้องเปิดรัน docker desktop ก่อน
 docker compose up -d
 
-# สร้าง Prisma client
+# ตรวจสอบการทำงานของ docker compose ด้วยคำสั่ง .... ? 
+
+# สร้าง Prisma client ขึ้นมาใหม่ เพื่อให้สามารถเขียนโค้ดเรียกใช้งานฐานข้อมูลได้โดยที่มีการแนะนำคำสั่ง (Auto-completion) และตรวจสอบความถูกต้องของข้อมูล (Type-safety)
 npx prisma generate
 
 # รัน migration
+#ห้ามใช้ prisma migrate dev บน Production เด็ดขาด เพราะคำสั่งนี้อาจสั่งลบข้อมูล (Reset) หากตรวจพบความขัดแย้งของ Schema
+#ใน Production ให้ใช้ npx prisma migrate deploy แทน ซึ่งจะรันเฉพาะไฟล์ Migration ที่ยังไม่ได้รัน โดยไม่มีการถามยืนยันหรือ Reset ข้อมูล
+# ใช้สำหรับ การเปลี่ยนแปลงโครงสร้างฐานข้อมูลจริง ในสภาพแวดล้อมสำหรับการพัฒนา
 npx prisma migrate dev --name init
+
+# run backend server
+npm run dev
 ```
 
-ถ้ารันสำเร็จ คุณจะเห็น backend ทำงานที่:
+ถ้ารันสำเร็จ จะเห็น backend ทำงานที่
 
 ```bash
-http://localhost:3000
+# ตรวจสอบเลข Port ว่าใช้ 3000 หรือ 3001 เครื่อง Macbook port 3000 ใช้ไม่ได้ต้องใช้ 3001
+http://localhost:3000/api/rooms
 ```
 
 ---
