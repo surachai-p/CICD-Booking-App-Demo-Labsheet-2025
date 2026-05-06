@@ -1,9 +1,8 @@
-# 🚀 Lab: CI/CD Pipeline with GitHub Actions
-## Booking App Demo 2025 — Vercel + Render Deployment
+# 🚀 Lab Workbook: CI/CD with booking-app-demo-2025
 
-> **Repository:** `https://github.com/surachai-p/booking-app-demo-2025`  
-> **ระดับ:** ปริญญาตรี  
-> **เวลา:** 4–5 ชั่วโมง  
+> **Reference Repository:** `https://github.com/surachai-p/booking-app-demo-2025`
+> **ระดับ:** ปริญญาตรี / ปริญญาโท
+> **เวลา:** 4–5 ชั่วโมง
 
 ---
 
@@ -11,12 +10,12 @@
 
 | ไฟล์ | หัวข้อ | เวลา |
 |------|--------|------|
-| [📖 LAB-THEORY.md](docs/LAB-THEORY.md) | ทฤษฎี GitHub Actions & CI/CD | อ่านก่อนทดลอง |
-| [⚙️ LAB-01-SETUP.md](docs/LAB-01-SETUP.md) | เตรียม Repository & Environment | 30 นาที |
-| [🔧 LAB-02-BACKEND.md](docs/LAB-02-BACKEND.md) | Backend Testing & Deploy to Render | 60 นาที |
-| [🎨 LAB-03-FRONTEND.md](docs/LAB-03-FRONTEND.md) | Frontend Testing & Deploy to Vercel | 60 นาที |
-| [🔒 LAB-04-SECURITY.md](docs/LAB-04-SECURITY.md) | Security Testing & NGINX Config | 45 นาที |
-| [📝 LAB-ASSIGNMENT.md](docs/LAB-ASSIGNMENT.md) | ใบงานส่ง & คำถาม | ส่งท้ายคาบ |
+| [📖 LAB-THEORY.md](LAB-THEORY.md) | ทฤษฎี GitHub Actions & CI/CD | อ่านก่อนทดลอง |
+| [⚙️ LAB-01-SETUP.md](LAB-01-SETUP.md) | เตรียม Repository & Environment | 45 นาที |
+| [🔧 LAB-02-BACKEND.md](LAB-02-BACKEND.md) | Backend Setup, Prisma & API Tests | 60 นาที |
+| [🎨 LAB-03-FRONTEND.md](LAB-03-FRONTEND.md) | Frontend Setup, Build & Vercel | 60 นาที |
+| [🔒 LAB-04-SECURITY.md](LAB-04-SECURITY.md) | Security Review & Deployment Hardening | 45 นาที |
+| [📝 LAB-ASSIGNMENT.md](LAB-ASSIGNMENT.md) | ใบงานส่ง & คำถาม | ส่งท้ายคาบ |
 
 ---
 
@@ -24,12 +23,12 @@
 
 หลังจากทดลองเสร็จ นักศึกษาจะสามารถ:
 
-1. **อธิบาย** กระบวนการ CI/CD และ GitHub Actions workflow ได้
-2. **เขียน** GitHub Actions workflow สำหรับ automated testing ทั้ง frontend และ backend
-3. **ตั้งค่า** Environment Variables และ Secrets ใน GitHub อย่างปลอดภัย
-4. **Deploy** Frontend ไปยัง Vercel และ Backend ไปยัง Render แบบอัตโนมัติ
-5. **ทดสอบ** ระบบด้านความปลอดภัย (XSS, CORS, Security Headers)
-6. **ตั้งค่า** NGINX เพื่อป้องกัน Cross-Site Scripting (XSS)
+1. **อธิบาย** กระบวนการ CI/CD ของ GitHub Actions ได้
+2. **ตั้งค่า** Self-hosted runner และ workflow ใน `.github/workflows/ci.yml`
+3. **ติดตั้ง** Backend (PostgreSQL + Prisma) และ Frontend (React + Vite)
+4. **รัน** Newman API tests และ Robot UI tests
+5. **สร้าง** environment files และตั้งค่า secrets อย่างปลอดภัย
+6. **Deploy** Frontend ไป Vercel และ Backend ไป Render แบบอัตโนมัติ
 
 ---
 
@@ -37,7 +36,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Developer Workstation                         │
+│                       Developer Workstation                    │
 │  ┌─────────────┐   git push   ┌──────────────────────────────┐  │
 │  │  Source Code │ ──────────▶  │      GitHub Repository       │  │
 │  └─────────────┘              │  booking-app-demo-2025        │  │
@@ -45,26 +44,25 @@
                                 └──────────────────────────────┘
                                            │
                           ┌────────────────┴────────────────┐
-                          │        GitHub Actions            │
-                          │  ┌──────────┐  ┌─────────────┐  │
-                          │  │ Frontend │  │   Backend   │  │
-                          │  │Workflow  │  │  Workflow   │  │
-                          │  └────┬─────┘  └──────┬──────┘  │
-                          └───────│────────────────│─────────┘
-                                  │                │
-                    ┌─────────────▼───┐  ┌─────────▼──────────┐
-                    │    Vercel       │  │      Render         │
-                    │  (Frontend)     │  │    (Backend)        │
-                    │  React + Vite   │  │  Node.js/Express    │
-                    │                 │  │  + PostgreSQL       │
-                    └─────────────────┘  └────────────────────┘
-                             │                      │
-                             └──────────┬───────────┘
-                                        │
-                               ┌────────▼────────┐
-                               │   End Users      │
-                               │  (Browser)       │
-                               └─────────────────┘
+                          │     GitHub Actions CI Workflow   │
+                          │       (.github/workflows/ci.yml) │
+                          └────────────────┬────────────────┘
+                                           │
+                    ┌─────────────┐      ┌───────────────┐
+                    │  Self-hosted │      │  GitHub-hosted │
+                    │    Runner    │      │  optional      │
+                    └──────┬───────┘      └──────┬────────┘
+                           │                     │
+             ┌─────────────▼─────────────┐   ┌────▼────┐
+             │       Backend Service      │   │ Vercel  │
+             │ Node.js + Express + Prisma │   │ Frontend │
+             │     + PostgreSQL / Docker  │   │ React + Vite │
+             └─────────────┬──────────────┘   └──────────┘
+                           │
+                     ┌─────▼─────┐
+                     │ End Users │
+                     │  (Browser)│
+                     └───────────┘
 ```
 
 ---
@@ -82,81 +80,69 @@
 
 ---
 
-## 🗓️ กระบวนการ CI/CD ที่จะสร้าง
+## 🗓️ กระบวนการ CI/CD ที่จะเรียนรู้
 
 ```
 git push
     │
-    ├──▶ [ Frontend Workflow ]
-    │         │
-    │         ├─ ✅ Install Dependencies
-    │         ├─ ✅ Lint & Format Check
-    │         ├─ ✅ Unit Tests (Vitest)
-    │         ├─ ✅ Integration Tests
-    │         ├─ ✅ Security Scan (OWASP)
-    │         ├─ ✅ Build Production
-    │         └─ ✅ Deploy → Vercel
-    │
-    └──▶ [ Backend Workflow ]
+    └──▶ [ GitHub Actions CI ]
               │
-              ├─ ✅ Install Dependencies
-              ├─ ✅ Lint Check (ESLint)
-              ├─ ✅ Unit Tests (Jest)
-              ├─ ✅ Integration Tests (Supertest)
-              ├─ ✅ Security Scan (npm audit)
-              ├─ ✅ Security Headers Test
-              └─ ✅ Deploy → Render
+              ├─ ✅ Checkout repository
+              ├─ ✅ Setup Node.js
+              ├─ ✅ Install backend dependencies
+              ├─ ✅ Start PostgreSQL (Docker Compose)
+              ├─ ✅ Generate Prisma client
+              ├─ ✅ Run backend migrations
+              ├─ ✅ Install frontend dependencies
+              ├─ ✅ Build frontend
+              ├─ ✅ Deploy to Vercel & Render
+              └─ ✅ Report workflow status
 ```
 
 ---
 
-## 📁 โครงสร้างไฟล์ที่จะสร้าง
+## 📁 โครงสร้างไฟล์หลักของโครงการ
 
 ```
 booking-app-demo-2025/
 ├── .github/
 │   └── workflows/
-│       ├── frontend-ci-cd.yml   ← Frontend CI/CD Pipeline
-│       └── backend-ci-cd.yml    ← Backend CI/CD Pipeline
-│
-├── frontend/                    ← React + Vite App
-│   ├── src/
-│   │   └── __tests__/
-│   │       ├── App.test.jsx          ← Unit Tests
-│   │       ├── BookingForm.test.jsx  ← Component Tests
-│   │       └── api.test.js           ← API Integration Tests
-│   ├── .env.example             ← Environment Template
-│   └── vite.config.js
-│
-├── backend/                     ← Node.js + Express API
-│   ├── tests/
-│   │   ├── unit/
-│   │   │   └── bookingService.test.js
-│   │   ├── integration/
-│   │   │   └── bookingRoutes.test.js
-│   │   └── security/
-│   │       └── security.test.js ← Security Tests
-│   ├── .env.example             ← Environment Template
-│   └── server.js
-│
-├── nginx/
-│   └── nginx.conf               ← NGINX Config (XSS Prevention)
-│
-└── scripts/
-    └── security-check.sh        ← Security Check Script
+│       └── ci.yml
+├── backend/
+│   ├── docker-compose.yml
+│   ├── package.json
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── server.js
+│   ├── database.js
+│   └── .env.example
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── .env.example
+├── newman/
+│   ├── hotel-booking-collection.json
+│   ├── hotel-booking-env.json
+├── tests/
+│   └── robot/
+│       └── hotel_booking_test.robot
+├── package.json
+└── README.md
 ```
 
 ---
 
 ## ✅ Checklist ก่อนเริ่มทดลอง
 
-- [ ] มี GitHub Account และล็อกอินแล้ว
 - [ ] Fork repository: `surachai-p/booking-app-demo-2025`
-- [ ] มี Vercel Account (สมัครฟรีด้วย GitHub)
-- [ ] มี Render Account (สมัครฟรีด้วย GitHub)
-- [ ] ติดตั้ง Node.js ≥ 18 แล้ว
-- [ ] ติดตั้ง Git แล้ว
-- [ ] อ่าน [LAB-THEORY.md](docs/LAB-THEORY.md) แล้ว
+- [ ] Clone repository ลงเครื่อง
+- [ ] สร้าง `backend/.env` และ `frontend/.env`
+- [ ] ติดตั้ง dependencies ทั้ง root/backend/frontend
+- [ ] รัน `docker compose up -d` ใน `backend`
+- [ ] ตรวจสอบ `.github/workflows/ci.yml`
+- [ ] ตั้งค่า GitHub Secrets ตามที่จำเป็น
+- [ ] ตรวจสอบว่า frontend และ backend ทำงานได้บน local
 
 ---
 
