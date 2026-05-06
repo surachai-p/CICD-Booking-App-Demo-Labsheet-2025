@@ -120,6 +120,21 @@ npx newman run newman/hotel-booking-collection.json   -e newman/hotel-booking-en
 
 ---
 
+## ขั้นตอนที่ 7: ตรวจสอบ Backend Deployment บน Render
+
+หลังจาก push ขึ้น GitHub และ workflow รันสำเร็จ:
+
+1. ไปที่ Render Dashboard
+2. ตรวจสอบ **booking-app-backend** service
+3. ดู **Logs** เพื่อตรวจสอบว่า deployment สำเร็จ
+4. ตรวจสอบ **Environment** เพื่อดูว่า secrets ตั้งค่าถูกต้อง
+5. ทดสอบ API endpoint:
+   ```bash
+   curl https://your-backend.onrender.com/api/rooms
+   ```
+
+---
+
 ## ✅ Checklist
 
 - [ ] backend dependencies ติดตั้งแล้ว
@@ -128,5 +143,6 @@ npx newman run newman/hotel-booking-collection.json   -e newman/hotel-booking-en
 - [ ] migration รันผ่าน
 - [ ] Newman API tests ผ่าน
 - [ ] เข้าใจ `.github/workflows/ci.yml` ที่เกี่ยวข้องกับ backend
+- [ ] ตรวจสอบ backend deployment บน Render สำเร็จ
 
 [← LAB-01 Setup](LAB-01-SETUP.md) | [ถัดไป: LAB-03 Frontend →](LAB-03-FRONTEND.md)
