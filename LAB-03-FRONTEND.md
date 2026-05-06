@@ -39,9 +39,43 @@ VITE_API_URL=http://localhost:3000
 
 ---
 
-## ขั้นตอนที่ 3: รัน Frontend Local
+## ⚠️ ขั้นตอนที่ 3: ตรวจสอบ Backend ทำงาน (IMPORTANT!)
+
+**Frontend ต้องติดต่อกับ Backend** ดังนั้น backend ต้องเปิดใช้งานก่อน:
+
+### 3.1 ตรวจสอบ Docker Compose และ Backend
 
 ```bash
+cd backend
+
+# ตรวจสอบว่า PostgreSQL container รันอยู่
+docker ps
+
+# ถ้าไม่มี ให้รัน
+docker compose up -d
+
+# รัน backend service ใน terminal ใหม่
+npm run dev
+```
+
+### 3.2 ตรวจสอบ Backend ตัดตัดที่ localhost:3000
+
+ใน terminal อื่น:
+
+```bash
+curl http://localhost:3000/api/rooms
+```
+
+ถ้าได้ response แสดงว่า backend ทำงาน ✅
+
+---
+
+## ขั้นตอนที่ 4: รัน Frontend Local
+
+**ในแท็บ Terminal ใหม่** (อย่าปิด backend):
+
+```bash
+cd frontend
 npm run dev
 ```
 
@@ -54,12 +88,13 @@ http://localhost:5173
 ตรวจสอบว่า:
 
 - หน้า Login โหลดได้
+- frontend สามารถเรียก backend API ได้ (ดู Browser DevTools → Network tab)
 - สามารถ login ด้วย `admin/admin123`
 - เข้าถึงหน้า Admin Dashboard ได้
 
 ---
 
-## ขั้นตอนที่ 4: สร้าง Production Build
+## ขั้นตอนที่ 5: สร้าง Production Build
 
 ```bash
 npm run build
@@ -69,7 +104,7 @@ npm run build
 
 ---
 
-## ขั้นตอนที่ 5: รัน Lint
+## ขั้นตอนที่ 6: รัน Lint
 
 ```bash
 npm run lint
@@ -79,7 +114,7 @@ npm run lint
 
 ---
 
-## ขั้นตอนที่ 6: ตรวจสอบการ Deploy บน Vercel
+## ขั้นตอนที่ 7: ตรวจสอบการ Deploy บน Vercel
 
 หลังจาก push ขึ้น GitHub และ workflow รันสำเร็จ:
 
@@ -95,21 +130,25 @@ npm run lint
 
 ---
 
-## ขั้นตอนที่ 7: ตรวจสอบ CI Workflow สำหรับ Frontend
+## ขั้นตอนที่ 8: ตรวจสอบ CI Workflow สำหรับ Frontend
 
 เปิดไฟล์ `.github/workflows/ci.yml` แล้วตรวจสอบ:
 
-1. มีขั้นตอน build frontend หรือไม่?
-2. มีการ deploy ไป Vercel หรือไม่?
-3. Environment variables ถูกส่งไปยัง Vercel อย่างไร?
+1. มีขั้นตอนรัน backend ด้วย Docker Compose หรือไม่?
+2. มีขั้นตอน build frontend หรือไม่?
+3. มีการ deploy ไป Vercel หรือไม่?
+4. Environment variables ถูกส่งไปยัง Vercel อย่างไร?
 
 ---
 
 ## ✅ Checklist
 
+- [ ] backend docker compose รันแล้ว
+- [ ] backend service ตัดตัดที่ `http://localhost:3000` แล้ว
 - [ ] frontend dependencies ติดตั้งแล้ว
+- [ ] frontend `.env` ชี้ไปยัง backend ถูกต้อง
 - [ ] frontend รันได้ที่ `http://localhost:5173`
-- [ ] `frontend/.env` ถูกตั้งค่าเรียบร้อย
+- [ ] frontend สามารถเรียก backend API ได้
 - [ ] build สำเร็จด้วย `npm run build`
 - [ ] lint ผ่าน
 - [ ] เข้าใจการตั้งค่า Vercel สำหรับ frontend

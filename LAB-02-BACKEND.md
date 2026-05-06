@@ -32,26 +32,34 @@ npm install
 
 ## ขั้นตอนที่ 2: ตั้งค่า Database
 
-### 2.1 สร้าง PostgreSQL ด้วย Docker Compose
+### 2.1 รัน PostgreSQL ด้วย Docker Compose
 
 ```bash
 cd backend
 docker compose up -d
 ```
 
-### 2.2 สร้าง Prisma client
+ตรวจสอบว่า PostgreSQL container ทำงาน:
+
+```bash
+docker ps
+```
+
+ควรเห็น container `postgres` กำลังรัน ✅
+
+### 2.2 สร้าง Prisma Client
 
 ```bash
 npx prisma generate
 ```
 
-### 2.3 รัน migration
+### 2.3 รัน Database Migration
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-> หากพบข้อความเกี่ยวกับ migration ให้ตอบ `y` เพื่อสร้าง migration ใหม่ตาม schema
+หลังจาก migration สำเร็จ จะเห็น schema ถูกสร้างใน PostgreSQL ✅
 
 ---
 
@@ -67,11 +75,7 @@ npm run dev
 curl http://localhost:3000/api/rooms
 ```
 
-หรือเรียก endpoint ไม่ต้องใช้ token เช่น:
-
-```bash
-curl http://localhost:3000/api/rooms
-```
+ถ้าได้ response แสดงว่า backend ทำงาน ✅
 
 ---
 

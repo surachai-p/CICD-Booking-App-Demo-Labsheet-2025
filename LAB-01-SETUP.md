@@ -94,38 +94,64 @@ npm install
 
 ## ขั้นตอนที่ 4: เตรียม Backend ด้วย Docker Compose และ Prisma
 
+### 4.1 ตรวจสอบ Docker
+
+ก่อนเริ่มต้น ต้องเปิด Docker Desktop ให้ทำงานอยู่แล้ว:
+
+```bash
+docker --version
+docker ps
+```
+
+### 4.2 รัน PostgreSQL ด้วย Docker Compose
+
 ```bash
 cd backend
 
-# รัน PostgreSQL ด้วย Docker Compose
-# ต้องเปิดรัน docker desktop ก่อน
+# รัน PostgreSQL container ในแบบ detached
 docker compose up -d
 
-# ตรวจสอบการทำงานของ docker compose ด้วยคำสั่ง .... ? 
+# ตรวจสอบว่า container ทำงาน
+docker ps
+```
 
-# สร้าง Prisma client ขึ้นมาใหม่ เพื่อให้สามารถเขียนโค้ดเรียกใช้งานฐานข้อมูลได้โดยที่มีการแนะนำคำสั่ง (Auto-completion) และตรวจสอบความถูกต้องของข้อมูล (Type-safety)
+ควรเห็น container `postgres` กำลังรัน ✅
+
+### 4.3 สร้าง Prisma Client
+
+```bash
+# สร้าง Prisma client เพื่อให้สามารถเรียกใช้ฐานข้อมูลได้ด้วย auto-completion และ type-safety
 npx prisma generate
+```
 
-# รัน migration
-#ห้ามใช้ prisma migrate dev บน Production เด็ดขาด เพราะคำสั่งนี้อาจสั่งลบข้อมูล (Reset) หากตรวจพบความขัดแย้งของ Schema
-#ใน Production ให้ใช้ npx prisma migrate deploy แทน ซึ่งจะรันเฉพาะไฟล์ Migration ที่ยังไม่ได้รัน โดยไม่มีการถามยืนยันหรือ Reset ข้อมูล
-# ใช้สำหรับ การเปลี่ยนแปลงโครงสร้างฐานข้อมูลจริง ในสภาพแวดล้อมสำหรับการพัฒนา
+### 4.4 รัน Database Migration
+
+```bash
+# รัน migration ครั้งแรกเพื่อสร้าง schema ในฐานข้อมูล
 npx prisma migrate dev --name init
+```
 
-# run backend server
+**หมายเหตุ:** ห้ามใช้ `prisma migrate dev` บน Production ให้ใช้ `prisma migrate deploy` แทน
+
+### 4.5 รัน Backend Service
+
+```bash
 npm run dev
 ```
 
-ถ้ารันสำเร็จ จะเห็น backend ทำงานที่
+ตรวจสอบว่า backend เปิดใช้งาน:
 
 ```bash
-# ตรวจสอบเลข Port ว่าใช้ 3000 หรือ 3001 เครื่อง Macbook port 3000 ใช้ไม่ได้ต้องใช้ 3001
-http://localhost:3000/api/rooms
+curl http://localhost:3000/api/rooms
 ```
+
+ถ้าได้ response แสดงว่า backend ทำงาน ✅
 
 ---
 
-## ขั้นตอนที่ 5: รัน Frontend
+## ขั้นตอนที่ 5: รัน Frontend (ใน Terminal ใหม่)
+
+**ทำงานใน Terminal ใหม่** (อย่าปิด backend):
 
 ```bash
 cd ../frontend
@@ -138,7 +164,27 @@ npm run dev
 http://localhost:5173
 ```
 
-ตรวจสอบว่า frontend สามารถเรียก backend ได้ผ่าน `VITE_API_URL`.
+ตรวจสอบว่า:
+
+- หน้า Login โหลดได้
+- frontend สามารถเรียก backend API ได้ผ่าน `VITE_API_URL`
+- สามารถ login ด้วย `admin/admin123` ได้
+
+---
+
+## ขั้นตอนที่ 5.5: หลีกเลี่ยงปัญหาเกี่ยวกับ Port
+
+หาก port 3000 ถูกใช้งานแล้ว (เช่นบน Macbook หรือ Windows) ให้แก้ไข `backend/.env`:
+
+```bash
+PORT=3001
+```
+
+แล้วเรียก API ใหม่:
+
+```bash
+curl http://localhost:3001/api/rooms
+```
 
 ---
 
