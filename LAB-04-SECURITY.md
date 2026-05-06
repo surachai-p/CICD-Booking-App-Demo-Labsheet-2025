@@ -116,6 +116,42 @@ Robot script นี้จะทดสอบ:
 
 ---
 
+## ขั้นตอนที่ 6: ตรวจสอบ Security บน Production
+
+### 6.1 ทดสอบ Backend API Security บน Render
+
+```bash
+# ทดสอบ CORS
+curl -H "Origin: https://your-vercel-app.vercel.app" \
+     https://your-backend.onrender.com/api/rooms
+
+# ทดสอบ JWT authentication
+curl https://your-backend.onrender.com/api/bookings \
+     -H "Authorization: Bearer invalid-token"
+
+# ทดสอบ rate limiting
+for i in {1..10}; do
+  curl https://your-backend.onrender.com/api/health
+done
+```
+
+### 6.2 ทดสอบ Frontend Security บน Vercel
+
+เปิดเบราว์เซอร์ไปที่ Vercel URL แล้วตรวจสอบ:
+
+- HTTPS ทำงาน
+- ไม่มี mixed content warnings
+- API calls ไปยัง backend ทำงานผ่าน HTTPS
+- ไม่มี sensitive data ใน browser console
+
+### 6.3 ตรวจสอบ Environment Variables
+
+- Vercel Dashboard → Project Settings → Environment Variables
+- Render Dashboard → Service Settings → Environment
+- ตรวจสอบว่าไม่มี secrets ถูก expose ใน frontend
+
+---
+
 ## ✅ Checklist
 
 - [ ] ทำ dependency scan ทั้ง root/backend/frontend
@@ -123,5 +159,6 @@ Robot script นี้จะทดสอบ:
 - [ ] เข้าใจความเสี่ยงของ self-hosted runner
 - [ ] ตรวจสอบ `.github/workflows/ci.yml` และ security flow
 - [ ] รู้วิธีเพิ่ม secrets ใน GitHub
+- [ ] ทดสอบ security บน production deployment
 
 [← LAB-03 Frontend](LAB-03-FRONTEND.md) | [ถัดไป: LAB-ASSIGNMENT →](LAB-ASSIGNMENT.md)
