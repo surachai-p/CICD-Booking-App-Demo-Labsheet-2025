@@ -81,17 +81,27 @@ npm run lint
 
 ## ขั้นตอนที่ 6: ตรวจสอบการ Deploy บน Vercel
 
-หากต้องการ deploy:
+หลังจาก push ขึ้น GitHub และ workflow รันสำเร็จ:
 
-1. เชื่อมต่อ repository กับ Vercel
-2. ตั้งค่า `Root Directory` เป็น `frontend`
-3. ตั้งค่า build command เป็น `npm run build`
-4. ตั้งค่า output directory เป็น `dist`
-5. เพิ่ม environment variable:
+1. ไปที่ Vercel Dashboard
+2. ตรวจสอบ project `booking-app-demo-2025`
+3. ดู **Deployments** เพื่อตรวจสอบว่า deployment ล่าสุดสำเร็จ
+4. คลิกที่ deployment ล่าสุดเพื่อดู logs
+5. ตรวจสอบ **Environment Variables** เพื่อดูว่า `VITE_API_URL` ตั้งค่าถูกต้อง
+6. ทดสอบ frontend ที่ Vercel URL:
+   - เปิดเบราว์เซอร์ไปที่ Vercel URL
+   - ลอง login ด้วย `admin/admin123`
+   - ตรวจสอบว่า API calls ไปยัง backend ทำงาน
 
-```bash
-VITE_API_URL=https://your-backend.onrender.com
-```
+---
+
+## ขั้นตอนที่ 7: ตรวจสอบ CI Workflow สำหรับ Frontend
+
+เปิดไฟล์ `.github/workflows/ci.yml` แล้วตรวจสอบ:
+
+1. มีขั้นตอน build frontend หรือไม่?
+2. มีการ deploy ไป Vercel หรือไม่?
+3. Environment variables ถูกส่งไปยัง Vercel อย่างไร?
 
 ---
 
@@ -103,5 +113,6 @@ VITE_API_URL=https://your-backend.onrender.com
 - [ ] build สำเร็จด้วย `npm run build`
 - [ ] lint ผ่าน
 - [ ] เข้าใจการตั้งค่า Vercel สำหรับ frontend
+- [ ] ตรวจสอบ frontend deployment บน Vercel สำเร็จ
 
 [← LAB-02 Backend](LAB-02-BACKEND.md) | [ถัดไป: LAB-04 Security →](LAB-04-SECURITY.md)
